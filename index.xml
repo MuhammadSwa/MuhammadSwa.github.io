@@ -1,19 +1,29 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Personal blog</title>
+    <title>Personal Blog</title>
     <link>https://muhammadswa.github.io/</link>
-    <description>Recent content on Personal blog</description>
+    <description>Recent content on Personal Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 31 Jul 2023 14:50:55 +0300</lastBuildDate><atom:link href="https://muhammadswa.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 31 Jul 2023 15:08:24 +0300</lastBuildDate><atom:link href="https://muhammadswa.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>A Post</title>
+      <link>https://muhammadswa.github.io/posts/a-post/</link>
+      <pubDate>Mon, 31 Jul 2023 15:08:24 +0300</pubDate>
+      
+      <guid>https://muhammadswa.github.io/posts/a-post/</guid>
+      <description>package main func main() { fmt.Println(&amp;#34;Hello world&amp;#34;) } </description>
+    </item>
+    
     <item>
       <title>Myfirstpost</title>
       <link>https://muhammadswa.github.io/posts/myfirstpost/</link>
       <pubDate>Mon, 31 Jul 2023 14:50:55 +0300</pubDate>
       
       <guid>https://muhammadswa.github.io/posts/myfirstpost/</guid>
-      <description>package main func main(){ fmt.Println(&amp;#34;Hello World&amp;#34;) } </description>
+      <description>my first post
+package main func main(){ fmt.Println(&amp;#34;Hello World&amp;#34;) } </description>
     </item>
     
   </channel>
