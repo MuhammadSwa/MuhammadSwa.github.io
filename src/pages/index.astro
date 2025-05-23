@@ -1,11 +1,260 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+// src/pages/blog/index.astro
+import { getCollection } from "astro:content";
+import BlogLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import BlogCard from "../components/BlogCard.astro";
+import { calculateReadingTime } from "../utils/utils";
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// Get all blog posts, filter out drafts, and sort by date
+const allPosts = await getCollection("blog", ({ data }) => {
+  return data.draft !== true;
+});
+
+const sortedPosts = allPosts.sort(
+  (a, b) =>
+    new Date(b.data.publishedDate).getTime() -
+    new Date(a.data.publishedDate).getTime(),
+);
+
+// Separate featured posts
+const featuredPosts = sortedPosts.filter((post) => post.data.featured);
+const regularPosts = sortedPosts.filter((post) => !post.data.featured);
+
+// Get all unique tags
+const allTags = [...new Set(allPosts.flatMap((post) => post.data.tags))].sort();
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<BlogLayout
+  title="Blog - All Articles"
+  description="Explore my thoughts on technology, design, and development through in-depth articles and tutorials."
+>
+  <Header />
+
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Stats Bar -->
+    <div
+      class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 mb-12"
+    >
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+        <div class="space-y-2">
+          <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">
+            {allPosts.length}
+          </div>
+          <div class="text-slate-600 dark:text-slate-300 font-medium">
+            Total Articles
+          </div>
+        </div>
+        <div class="space-y-2">
+          <div class="text-3xl font-bold text-purple-600 dark:text-purple-400">
+            {allTags.length}
+          </div>
+          <div class="text-slate-600 dark:text-slate-300 font-medium">
+            Topics Covered
+          </div>
+        </div>
+        <div class="space-y-2">
+          <div class="text-3xl font-bold text-green-600 dark:text-green-400">
+            {
+              Math.round(
+                allPosts.reduce((acc, post) => {
+                  const readingTime = calculateReadingTime(post.body!);
+                  return acc + parseInt(readingTime);
+                }, 0) / allPosts.length,
+              )
+            }
+          </div>
+          <div class="text-slate-600 dark:text-slate-300 font-medium">
+            Avg. Read Time
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page Header -->
+    <header class="text-center mb-16">
+      <h1
+        class="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6"
+      >
+        Latest <span
+          class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+          >Articles</span
+        >
+      </h1>
+      <!-- <p -->
+      <!--   class="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed" -->
+      <!-- > -->
+      <!--   Dive into my thoughts on technology, development practices, design -->
+      <!--   principles, and the ever-evolving world of software engineering. -->
+      <!-- </p> -->
+    </header>
+
+    <!-- Tags Filter -->
+    <!-- <div class="mb-12"> -->
+    <!--   <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4"> -->
+    <!--     Browse by Topic -->
+    <!--   </h2> -->
+    <!--   <div class="flex flex-wrap gap-2"> -->
+    <!--     <button -->
+    <!--       class="tag-filter active px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium transition-all duration-200" -->
+    <!--       data-tag="all" -->
+    <!--     > -->
+    <!--       All Posts -->
+    <!--     </button> -->
+    <!--     { -->
+    <!--       allTags.map((tag) => ( -->
+    <!--         <button -->
+    <!--           class="tag-filter px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full text-sm font-medium transition-all duration-200" -->
+    <!--           data-tag={tag} -->
+    <!--         > -->
+    <!--           {tag} -->
+    <!--         </button> -->
+    <!--       )) -->
+    <!--     } -->
+    <!--   </div> -->
+    <!-- </div> -->
+
+    <!-- Featured Posts -->
+    {
+      featuredPosts.length > 0 && (
+        <section class="mb-16">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-8 flex items-center">
+            <svg
+              class="w-6 h-6 mr-2 text-yellow-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            Featured Articles
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {featuredPosts.map((post) => (
+              <BlogCard
+                title={post.data.title}
+                description={post.data.description}
+                publishedDate={post.data.publishedDate}
+                readingTime={calculateReadingTime(post.body!)}
+                slug={post.id}
+                tags={post.data.tags}
+                featured={true}
+              />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <!-- All Posts -->
+    <section>
+      <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-8">
+        All Articles
+      </h2>
+      <div
+        id="posts-container"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+      >
+        {
+          regularPosts.map((post) => (
+            <div class="post-item" data-tags={JSON.stringify(post.data.tags)}>
+              <BlogCard
+                title={post.data.title}
+                description={post.data.description}
+                publishedDate={post.data.publishedDate}
+                readingTime={calculateReadingTime(post.body!)}
+                slug={post.id}
+                tags={post.data.tags}
+                featured={false}
+              />
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="hidden text-center py-16">
+        <svg
+          class="w-16 h-16 text-slate-400 dark:text-slate-600 mx-auto mb-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.5-1.01-6-2.709M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+          ></path>
+        </svg>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+          No posts found
+        </h3>
+        <p class="text-slate-600 dark:text-slate-400">
+          Try selecting a different topic or browse all posts.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</BlogLayout>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const tagFilters = document.querySelectorAll(".tag-filter");
+    const postItems = document.querySelectorAll(".post-item");
+    const postsContainer = document.getElementById("posts-container");
+    const emptyState = document.getElementById("empty-state");
+
+    tagFilters.forEach((filter) => {
+      filter.addEventListener("click", function () {
+        const selectedTag = this.dataset.tag;
+
+        // Update active filter
+        tagFilters.forEach((f) => {
+          f.classList.remove("active", "bg-blue-600", "text-white");
+          f.classList.add(
+            "bg-slate-100",
+            "dark:bg-slate-800",
+            "text-slate-600",
+            "dark:text-slate-300",
+          );
+        });
+
+        this.classList.add("active", "bg-blue-600", "text-white");
+        this.classList.remove(
+          "bg-slate-100",
+          "dark:bg-slate-800",
+          "text-slate-600",
+          "dark:text-slate-300",
+        );
+
+        // Filter posts
+        let visibleCount = 0;
+
+        postItems.forEach((item) => {
+          const postTags = JSON.parse(item.dataset.tags || "[]");
+          const shouldShow =
+            selectedTag === "all" || postTags.includes(selectedTag);
+
+          if (shouldShow) {
+            item.style.display = "block";
+            visibleCount++;
+          } else {
+            item.style.display = "none";
+          }
+        });
+
+        // Show/hide empty state
+        if (visibleCount === 0) {
+          postsContainer?.classList.add("hidden");
+          emptyState?.classList.remove("hidden");
+        } else {
+          postsContainer?.classList.remove("hidden");
+          emptyState?.classList.add("hidden");
+        }
+      });
+    });
+  });
+</script>

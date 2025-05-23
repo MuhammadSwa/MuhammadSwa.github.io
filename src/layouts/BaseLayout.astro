@@ -1,0 +1,31 @@
+---
+import "../styles.css";
+// src/layouts/BlogLayout.astro
+export interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "A personal blog about technology, design, and life." } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body class="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 min-h-screen transition-colors duration-300">
+    <div class="relative">
+      <!-- Background Pattern -->
+      
+      <!-- Content -->
+      <div class="relative z-10">
+        <slot />
+      </div>
+    </div>
+  </body>
+</html>

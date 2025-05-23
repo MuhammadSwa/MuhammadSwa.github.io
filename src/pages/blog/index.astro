@@ -1,0 +1,257 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import { getCollection } from "astro:content";
+import { calculateReadingTime } from "../../utils/utils";
+
+export interface Props {
+  currentPage: number;
+  totalPages: number;
+  posts: any[];
+}
+
+const { currentPage = 1, totalPages, posts } = Astro.props;
+
+// If no posts are passed as props, get all blog posts
+const allPosts = posts || (await getCollection("blog")).sort(
+  (a, b) => b.data.publishedDate.valueOf() - a.data.publishedDate.valueOf()
+);
+
+// Pagination logic
+const postsPerPage = 6;
+const startIndex = (currentPage - 1) * postsPerPage;
+const endIndex = startIndex + postsPerPage;
+const paginatedPosts = allPosts.slice(startIndex, endIndex);
+const calculatedTotalPages = totalPages || Math.ceil(allPosts.length / postsPerPage);
+
+// Generate pagination links
+const paginationLinks = Array.from({ length: calculatedTotalPages }, (_, i) => i + 1);
+---
+
+<BaseLayout 
+  title="Blog - Latest Articles & Insights" 
+  description="Explore our latest blog posts covering technology, development, and industry insights."
+>
+  <Header />
+
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Page Header -->
+    <header class="mb-12">
+      <!-- Breadcrumb -->
+      <nav class="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400 mb-8">
+        <a
+          href="/"
+          class="hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+        >
+          Home
+        </a>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5l7 7-7 7"
+          ></path>
+        </svg>
+        <span class="text-slate-400 dark:text-slate-500">Blog</span>
+      </nav>
+
+      <!-- Page Title -->
+      <div class="text-center mb-8">
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-4">
+          Latest Articles
+        </h1>
+        <p class="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+          Discover insights, tutorials, and thoughts on technology, development, and more.
+        </p>
+      </div>
+
+      <!-- Stats -->
+      <div class="flex justify-center">
+        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl px-6 py-3 border border-slate-200 dark:border-slate-700">
+          <span class="text-sm text-slate-600 dark:text-slate-300">
+            {allPosts.length} {allPosts.length === 1 ? 'Article' : 'Articles'} Published
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Blog Posts Grid -->
+    <section class="mb-16">
+      {paginatedPosts.length === 0 ? (
+        <div class="text-center py-16">
+          <div class="w-24 h-24 mx-auto mb-6 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
+            <svg class="w-12 h-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H15" />
+            </svg>
+          </div>
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">No Articles Found</h2>
+          <p class="text-slate-600 dark:text-slate-300">Check back later for new content!</p>
+        </div>
+      ) : (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {paginatedPosts.map((post) => {
+            const { title, description, publishedDate, updatedDate, tags } = post.data;
+            const readingTime = calculateReadingTime(post.body);
+            
+            const formattedDate = publishedDate.toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            });
+
+            return (
+              <article class="group bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-300 hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-slate-900/20 overflow-hidden">
+                <div class="p-6">
+                  <!-- Tags -->
+                  {tags && tags.length > 0 && (
+                    <div class="flex flex-wrap gap-2 mb-4">
+                      {tags.slice(0, 2).map((tag: string) => (
+                        <span class="px-2 py-1 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 text-blue-800 dark:text-blue-200 rounded-full text-xs font-medium">
+                          #{tag}
+                        </span>
+                      ))}
+                      {tags.length > 2 && (
+                        <span class="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full text-xs">
+                          +{tags.length - 2}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  <!-- Title -->
+                  <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+                    <a href={`/${post.id}`} class="hover:underline">
+                      {title}
+                    </a>
+                  </h2>
+
+                  <!-- Description -->
+                  <p class="text-slate-600 dark:text-slate-300 mb-4 line-clamp-3 text-sm leading-relaxed">
+                    {description}
+                  </p>
+
+                  <!-- Meta Info -->
+                  <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-4 border-t border-slate-100 dark:border-slate-700">
+                    <div class="flex items-center space-x-4">
+                      <!-- Date -->
+                      <div class="flex items-center">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <time datetime={publishedDate.toISOString()}>
+                          {formattedDate}
+                        </time>
+                      </div>
+
+                      <!-- Reading Time -->
+                      <div class="flex items-center">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {readingTime}
+                      </div>
+                    </div>
+
+                    <!-- Updated Indicator -->
+                    {updatedDate && (
+                      <div class="flex items-center text-amber-600 dark:text-amber-400">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Updated
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <!-- Read More Link -->
+                <div class="px-6 pb-6">
+                  <a
+                    href={`/${post.id}`}
+                    class="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium group-hover:underline transition-colors"
+                  >
+                    Read Article
+                    <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </a>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </section>
+
+    <!-- Pagination -->
+    {calculatedTotalPages > 1 && (
+      <nav class="flex justify-center" aria-label="Blog pagination">
+        <div class="flex items-center space-x-2">
+          <!-- Previous Button -->
+          {currentPage > 1 && (
+            <a
+              href={currentPage === 2 ? "/blog" : `/blog/page/${currentPage - 1}`}
+              class="flex items-center px-4 py-2 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 transition-all"
+              aria-label="Previous page"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+              Previous
+            </a>
+          )}
+
+          <!-- Page Numbers -->
+          <div class="flex items-center space-x-1">
+            {paginationLinks.map((pageNum) => {
+              const isCurrentPage = pageNum === currentPage;
+              const href = pageNum === 1 ? "/blog" : `/blog/page/${pageNum}`;
+              
+              return (
+                <a
+                  href={href}
+                  class={`px-3 py-2 text-sm font-medium rounded-lg transition-all ${
+                    isCurrentPage
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600"
+                  }`}
+                  aria-label={`Page ${pageNum}`}
+                  aria-current={isCurrentPage ? "page" : undefined}
+                >
+                  {pageNum}
+                </a>
+              );
+            })}
+          </div>
+
+          <!-- Next Button -->
+          {currentPage < calculatedTotalPages && (
+            <a
+              href={`/blog/page/${currentPage + 1}`}
+              class="flex items-center px-4 py-2 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 transition-all"
+              aria-label="Next page"
+            >
+              Next
+              <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          )}
+        </div>
+      </nav>
+    )}
+
+    <!-- Page Info -->
+    {calculatedTotalPages > 1 && (
+      <div class="text-center mt-8">
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+          Showing {startIndex + 1} to {Math.min(endIndex, allPosts.length)} of {allPosts.length} articles
+        </p>
+      </div>
+    )}
+  </main>
+
+  <Footer />
+</BaseLayout>

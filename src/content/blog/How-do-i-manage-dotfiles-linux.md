@@ -1,0 +1,93 @@
+---
+# src/content/blog/getting-started-with-astro.md
+title: "How Do I Manage Dotfiles In Linux"
+description: "Learn how to manage dotfiles in Linux using Stow, Git, and Systemd."
+publishedDate: 2024-01-15
+updatedDate: 2024-01-20
+tags: ["linux"]
+featured: true
+draft: false
+image:
+  src: "/images/astro-hero.jpg"
+  alt: "Astro logo with colorful background"
+---
+
+- I use `stow`, `git`,`systemd`
+### Stow
+- `stow` simplifies managing configuration files by creating symbolic links.
+-  make a parent directory that will contain all configs
+- create subfolders within your `~/dotfiles` directory, with each subfolder holding the configuration for a specific program (e.g., `~/dotfiles/nvim`)
+- `Stow` creates symbolic links (shortcuts, essentially) from the files inside that subfolder to where your system or applications expect them to be in your actual home directory.
+- So, if you have `~/dotfiles/bash/.bashrc`, Stow will create a symlink at `~/.bashrc` that points back to the original file in your `~/dotfiles` directory.
+- So, `~/dotfiles/vim/.config/nvim/`, will create symlink at `~/.config/nvim/`
+```bash
+sudo pacman -S stow
+mkdir ~/dotfiles
+cd ~/dotfiles
+mkdir -p vim/.config/nvim/init.lua
+stow nvim
+ls ~/.config/nvim #confirm that a symlink was generated
+```
+### Git
+- init a `git` repo and connect it to  `github`
+```bash
+git init
+git remote add origin YOUR_REMOTE_URL
+```
+### push script
+- make a push script using bash
+- `~/dotfiles/push_script.sh`
+```bash
+#!/bin/sh
+# Assuming your dotfiles repo is at ~/dotfiles
+
+cd $HOME/dotfiles # Or wherever your dotfiles repo is
+git add . # Add any new or changed files
+git commit -m "Auto-commit dotfiles changes $(date +%Y-%m-%d_%H-%M-%S)" || true # Commit only if changes exist
+git push
+```
+- Make it executable:
+```bash
+chmod +x push_script.sh
+```
+### systemd
+- Systemd operates on the principle of "units," and each unit type (like a service, timer, socket, etc.) has its own dedicated file extension and purpose.
+	- A `.service` file describes what to run (e.g., a script, an application).
+	- A `.timer` file describes when to run a corresponding service.
+	
+- Create a service file (`~/.config/systemd/user/dotfiles-push.service`)
+```systemd
+[Unit]
+Description=Push dotfiles to GitHub
+
+[Service]
+Type = oneshot
+ExecStart=/bin/bash -c "~/dotfiles/push_script.sh"
+# Ensure HOME is set correctly for your script
+Environment=HOME=%h
+```
+- Create a timer file (`~/.config/systemd/user/dotfiles-push.timer`)
+```systemd
+[Unit]
+Description=Run dotfiles push service hourly
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+# This line links the timer to the service:
+Unit=dotfiles-push.service
+
+[Install]
+WantedBy=timers.target
+```
+- Reload systemd, enable, and start the timer:
+```bash
+systemctl --user daemon-reload
+systemctl --user enable dotfiles-push.timer
+systemctl --user start dotfiles-push.timer
+```
+- check the status
+```bash
+systemctl --user status dotfiles-push.timer
+journalctl --user -u dotfiles-push.service
+```

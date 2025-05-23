@@ -1,0 +1,166 @@
+---
+// src/components/Footer.astro
+const currentYear = new Date().getFullYear();
+
+const socialLinks = [
+  {
+    name: "Twitter",
+    href: "https://twitter.com/yourusername",
+    icon: "M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z",
+  },
+  {
+    name: "GitHub",
+    href: "https://github.com/yourusername",
+    icon: "M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22",
+  },
+  {
+    name: "LinkedIn",
+    href: "https://linkedin.com/in/yourusername",
+    icon: "M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z M4 2a2 2 0 100 4 2 2 0 000-4z",
+  },
+  {
+    name: "RSS",
+    href: "/rss.xml",
+    icon: "M4 11a9 9 0 019 9M4 4a16 16 0 0116 16M6 18h.01",
+  },
+];
+
+const footerLinks = [
+  {
+    title: "Blog",
+    links: [
+      { name: "All Posts", href: "/blog" },
+      { name: "Categories", href: "/categories" },
+      { name: "Tags", href: "/tags" },
+      { name: "Archive", href: "/archive" },
+    ],
+  },
+  {
+    title: "About",
+    links: [
+      { name: "About Me", href: "/about" },
+      { name: "Uses", href: "/uses" },
+      { name: "Contact", href: "/contact" },
+      { name: "Resume", href: "/resume" },
+    ],
+  },
+];
+---
+
+<footer
+  class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700"
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Main Footer Content -->
+    <div class="py-12">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Brand Section -->
+        <div class="lg:col-span-1">
+          <div class="flex items-center space-x-3 mb-4">
+            <div
+              class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center"
+            >
+              <span class="text-white font-bold text-lg">M</span>
+            </div>
+            <span
+              class="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent"
+            >
+              Blog
+            </span>
+          </div>
+          <p class="text-slate-600 dark:text-slate-400 mb-6 max-w-sm">
+            Dentistry student by day, code enthusiast by night. Building bridges
+            between healthcare and technology.
+          </p>
+
+          <!-- Social Links -->
+          <div class="flex space-x-4">
+            {
+              socialLinks.map((social) => (
+                <a
+                  href={social.href}
+                  class="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-all duration-200 hover:scale-105"
+                  aria-label={social.name}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d={social.icon}
+                    />
+                  </svg>
+                </a>
+              ))
+            }
+          </div>
+        </div>
+
+        <!-- Footer Links -->
+        {
+          footerLinks.map((section) => (
+            <div>
+              <h3 class="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider mb-4">
+                {section.title}
+              </h3>
+              <ul class="space-y-3">
+                {section.links.map((link) => (
+                  <li>
+                    <a
+                      href={link.href}
+                      class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-200"
+                    >
+                      {link.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <!-- Newsletter Signup -->
+    <div class="py-8 border-t border-slate-200 dark:border-slate-700">
+      <div class="max-w-md mx-auto text-center">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+          Stay Updated
+        </h3>
+        <p class="text-slate-600 dark:text-slate-400 mb-4">
+          Get notified when I publish new articles
+        </p>
+        <form class="flex gap-2">
+          <input
+            type="email"
+            placeholder="Enter your email"
+            class="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400"
+            required
+          />
+          <button
+            type="submit"
+            class="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 hover:scale-105"
+          >
+            Subscribe
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Bottom Footer -->
+    <div class="py-6 border-t border-slate-200 dark:border-slate-700">
+      <div class="flex flex-col md:flex-row items-center justify-between">
+        <p class="text-sm text-slate-600 dark:text-slate-400">
+          © {currentYear} Blog. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>

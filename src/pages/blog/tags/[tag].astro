@@ -1,0 +1,52 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import BlogCard from '../../../components/BlogCard';
+import Pagination from '../../../components/Pagination';
+import Tags from '../../../components/Tags';
+
+export async function getStaticPaths({ paginate }) {
+  const posts = await getCollection('blog');
+  const tags = [...new Set(posts.flatMap((post) => post.data.tags))];
+  
+  return tags.map((tag) => {
+    const filteredPosts = posts.filter((post) => post.data.tags.includes(tag));
+    return paginate(filteredPosts, { params: { tag }, pageSize: 6 });
+  });
+}
+
+const { page, tag } = Astro.props;
+const { data: posts } = page;
+const allPosts = await getCollection('blog');
+const allTags = [...new Set(allPosts.flatMap((post) => post.data.tags))];
+const tagCounts = allTags.reduce((acc, tag) => {
+  acc[tag] = allPosts.filter((post) => post.data.tags.includes(tag)).length;
+  return acc;
+}, {} as Record<string, number>);
+
+const tags = allTags.map((name) => ({ name, count: tagCounts[name] }));
+---
+
+<BaseLayout title={`Posts tagged with "${tag}"`}>
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">
+      Posts tagged with "{tag}"
+    </h1>
+
+    <div class="mb-8">
+      <Tags tags={tags} selectedTag={tag} />
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      {posts.map((post) => (
+        <BlogCard post={post} />
+      ))}
+    </div>
+
+    <Pagination
+      currentPage={page.currentPage}
+      totalPages={page.lastPage}
+      baseUrl={`/blog/tags/${tag}`}
+    />
+  </main>
+</BaseLayout> 

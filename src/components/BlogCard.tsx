@@ -1,0 +1,105 @@
+import type { CollectionEntry } from "astro:content";
+import { calculateReadingTime } from "../utils/utils";
+
+
+interface BlogCardProps {
+  post: CollectionEntry<'blog'>
+}
+export default function BlogCard(props: BlogCardProps) {
+  const { title, description, tags, publishedDate, featured } = props.post.data;
+  const id = props.post.id;
+  const readingTime = calculateReadingTime(props.post.body!);
+
+  const formattedDate = publishedDate.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  return (
+
+    <article
+      class={`group relative bg-white dark:bg-slate-900 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 dark:border-slate-700 transition-all duration-300 hover:-translate-y-1 ${featured ? "ring-2 ring-blue-500 ring-opacity-50" : ""}`}
+    >
+      {
+        featured && (
+          <div class="absolute -top-3 left-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+            Featured
+          </div>
+        )
+      }
+
+      <div class="p-6">
+        {/* <!-- Tags --> */}
+        {
+          tags.length > 0 && (
+            <div class="flex flex-wrap gap-2 mb-4">
+              {tags.map((tag) => (
+                <span class="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-medium">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )
+        }
+
+        {/* <!-- Title --> */}
+        <h2
+          class="text-xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200"
+        >
+          <a href={`/${id}`} class="stretched-link">
+            {title}
+          </a>
+        </h2>
+
+        {/* <!-- Description --> */}
+        <p class="text-slate-600 dark:text-slate-300 mb-4 line-clamp-3">
+          {description}
+        </p>
+
+        {/* <!-- Meta --> */}
+        <div
+          class="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400"
+        >
+          <time datetime={publishedDate.toISOString()} class="flex items-center">
+            <svg
+              class="w-4 h-4 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              ></path>
+            </svg>
+            {formattedDate}
+          </time>
+
+          <span class="flex items-center">
+            <svg
+              class="w-4 h-4 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            {readingTime}
+          </span>
+        </div>
+      </div>
+
+      {/* <!-- Hover Effect --> */}
+      <div
+        class="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+      >
+      </div>
+    </article>
+  )
+}
