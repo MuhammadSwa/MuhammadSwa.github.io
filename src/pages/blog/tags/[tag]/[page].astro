@@ -1,0 +1,241 @@
+---
+// src/pages/tags/[tag]/[...page].astro
+import { getCollection } from "astro:content";
+import type { GetStaticPaths } from "astro";
+import BlogLayout from "../../../../layouts/BaseLayout.astro";
+import Header from "../../../../components/Header.astro";
+import Footer from "../../../../components/Footer.astro";
+
+export const getStaticPaths: GetStaticPaths = async ({ paginate }) => {
+  // Get all blog posts
+  const allPosts = await getCollection("blog", ({ data }) => {
+    return data.draft !== true;
+  });
+
+  // Create tag statistics
+  const tagStats = {};
+  allPosts.forEach((post) => {
+    post.data.tags?.forEach((tag) => {
+      if (!tagStats[tag]) {
+        tagStats[tag] = {
+          name: tag,
+          posts: [],
+        };
+      }
+      tagStats[tag].posts.push(post);
+    });
+  });
+
+  // Generate paths for each tag with pagination
+  return Object.keys(tagStats).flatMap((tagName) => {
+    const tagPosts = tagStats[tagName].posts.sort((a, b) => 
+      new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
+    );
+    
+    const tagSlug = tagName.toLowerCase().replace(/\s+/g, "-");
+    
+    return paginate(tagPosts, {
+      params: { tag: tagSlug },
+      pageSize: 6,
+      props: { tagName, totalPosts: tagPosts.length }
+    });
+  });
+};
+
+const { page, tagName, totalPosts } = Astro.props;
+const { tag } = Astro.params;
+
+// Format date helper
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+}
+
+// Calculate reading time (rough estimate)
+function getReadingTime(content: string) {
+  const wordsPerMinute = 200;
+  const words = content.split(/\s+/).length;
+  const minutes = Math.ceil(words / wordsPerMinute);
+  return minutes;
+}
+---
+
+<BlogLayout
+  title={`${tagName} - Tag Archives`}
+  description={`Browse all articles tagged with "${tagName}". Discover ${totalPosts} articles covering various topics related to ${tagName}.`}
+>
+  <Header />
+
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Page Header -->
+    <header class="text-center mb-16">
+      <div class="mb-4">
+        <a
+          href="/tags"
+          class="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to all topics
+        </a>
+      </div>
+      
+      <div class="inline-flex items-center bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 text-slate-700 dark:text-slate-300 rounded-full px-6 py-3 mb-6">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+        </svg>
+        <span class="font-semibold text-lg">{tagName}</span>
+      </div>
+      
+      <h1 class="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6">
+        Articles tagged with <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">"{tagName}"</span>
+      </h1>
+      
+      <p class="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed">
+        {totalPosts} article{totalPosts !== 1 ? 's' : ''} found
+        {page.total > 1 && ` • Page ${page.currentPage} of ${page.lastPage}`}
+      </p>
+    </header>
+
+    <!-- Articles Grid -->
+    <section class="mb-16">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {page.data.map((post) => (
+          <article class="group bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300">
+            <div class="p-6">
+              <div class="flex items-center justify-between mb-4">
+                <time 
+                  datetime={post.data.pubDate}
+                  class="text-sm text-slate-500 dark:text-slate-400 font-medium"
+                >
+                  {formatDate(post.data.pubDate)}
+                </time>
+                <span class="text-sm text-slate-500 dark:text-slate-400">
+                  {getReadingTime(post.render ? post.render().toString() : post.body || '')} min read
+                </span>
+              </div>
+              
+              <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <a href={`/blog/${post.slug}`} class="block">
+                  {post.data.title}
+                </a>
+              </h2>
+              
+              {post.data.description && (
+                <p class="text-slate-600 dark:text-slate-300 mb-4 line-clamp-3">
+                  {post.data.description}
+                </p>
+              )}
+              
+              <div class="flex items-center justify-between">
+                <div class="flex flex-wrap gap-2">
+                  {post.data.tags?.slice(0, 2).map((postTag) => (
+                    <span class={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${postTag === tagName 
+                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' 
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}>
+                      {postTag}
+                    </span>
+                  ))}
+                  {post.data.tags && post.data.tags.length > 2 && (
+                    <span class="text-xs text-slate-500 dark:text-slate-400">
+                      +{post.data.tags.length - 2} more
+                    </span>
+                  )}
+                </div>
+                
+                <a 
+                  href={`/blog/${post.slug}`}
+                  class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm transition-colors"
+                >
+                  Read more →
+                </a>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <!-- Pagination -->
+    {page.lastPage > 1 && (
+      <nav class="flex items-center justify-center space-x-4" aria-label="Pagination">
+        <!-- Previous Page -->
+        {page.url.prev && (
+          <a
+            href={page.url.prev}
+            class="flex items-center px-4 py-2 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Previous
+          </a>
+        )}
+
+        <!-- Page Numbers -->
+        <div class="flex space-x-2">
+          {Array.from({ length: page.lastPage }, (_, i) => i + 1).map((pageNum) => {
+            const isCurrentPage = pageNum === page.currentPage;
+            const pageUrl = pageNum === 1 ? `/tags/${tag}` : `/tags/${tag}/${pageNum}`;
+            
+            return (
+              <a
+                href={pageUrl}
+                class={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  isCurrentPage
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-blue-300 dark:hover:border-blue-600'
+                }`}
+                aria-current={isCurrentPage ? 'page' : undefined}
+              >
+                {pageNum}
+              </a>
+            );
+          })}
+        </div>
+
+        <!-- Next Page -->
+        {page.url.next && (
+          <a
+            href={page.url.next}
+            class="flex items-center px-4 py-2 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200"
+          >
+            Next
+            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        )}
+      </nav>
+    )}
+
+    <!-- Back to Tags -->
+    <div class="text-center mt-16">
+      <a
+        href="/tags"
+        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+      >
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+        </svg>
+        Explore All Topics
+      </a>
+    </div>
+  </main>
+
+  <Footer />
+</BlogLayout>
+
+<style>
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
